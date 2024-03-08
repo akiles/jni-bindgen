@@ -37,8 +37,18 @@ cfg_if! {if #[cfg(any(target_os = "android", feature = "force-define", all(featu
     }
 }}
 
-#[cfg(any(target_os = "android", feature = "force-define", all(feature = "force-define-x86_64-unknown-linux-gnu", target_arch = "x86_64", target_vendor = "unknown", target_os = "linux", target_env = "gnu")))] mod extras {
-    use super::*;
+#[cfg(any(
+    target_os = "android",
+    feature = "force-define",
+    all(
+        feature = "force-define-x86_64-unknown-linux-gnu",
+        target_arch = "x86_64",
+        target_vendor = "unknown",
+        target_os = "linux",
+        target_env = "gnu"
+    )
+))]
+mod extras {
 
     mod strings;
     mod throwable;
