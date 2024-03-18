@@ -69,7 +69,7 @@ impl<'a> Field<'a> {
                 }
                 if let Ok(fqn) = context.java_to_rust_path(class, mod_) {
                     rust_set_type_buffer = format!(
-                        "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<&'obj {}>>",
+                        "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<__jni_bindgen::Ref<'obj, {}>>>",
                         &fqn
                     );
                     rust_get_type_buffer = format!(
@@ -127,7 +127,7 @@ impl<'a> Field<'a> {
                 }
 
                 rust_set_type_buffer = format!(
-                    "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<&'obj {}>>",
+                    "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<__jni_bindgen::Ref<'obj, {}>>>",
                     &buffer
                 );
                 rust_get_type_buffer = format!(
@@ -189,7 +189,7 @@ impl<'a> Field<'a> {
         let env_param = if self.java.is_static() {
             "env: __jni_bindgen::Env<'env>"
         } else {
-            "&'env self"
+            "self: __jni_bindgen::Ref<'env, Self>"
         };
 
         let url = KnownDocsUrl::from_field(
@@ -246,11 +246,7 @@ impl<'a> Field<'a> {
                 )?;
                 writeln!(out, "{}    unsafe {{", indent)?;
                 if !self.java.is_static() {
-                    writeln!(
-                        out,
-                        "{}        let env = __jni_bindgen::Env::from_raw(self.0.env);",
-                        indent
-                    )?;
+                    writeln!(out, "{}        let env = self.env();", indent)?;
                 }
                 writeln!(
                     out,
@@ -270,7 +266,7 @@ impl<'a> Field<'a> {
                 } else {
                     writeln!(
                         out,
-                        "{}        env.get_{}_field(self.0.object, __jni_field)",
+                        "{}        env.get_{}_field(self.as_raw(), __jni_field)",
                         indent, field_fragment
                     )?;
                 }
@@ -298,11 +294,7 @@ impl<'a> Field<'a> {
                     )?;
                     writeln!(out, "{}    unsafe {{", indent)?;
                     if !self.java.is_static() {
-                        writeln!(
-                            out,
-                            "{}        let env = __jni_bindgen::Env::from_raw(self.0.env);",
-                            indent
-                        )?;
+                        writeln!(out, "{}        let env = self.env();", indent)?;
                     }
                     writeln!(
                         out,
@@ -322,7 +314,7 @@ impl<'a> Field<'a> {
                     } else {
                         writeln!(
                             out,
-                            "{}        env.set_{}_field(self.0.object, __jni_field, value)",
+                            "{}        env.set_{}_field(self.as_raw(), __jni_field, value)",
                             indent, field_fragment
                         )?;
                     }

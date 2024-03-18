@@ -102,7 +102,7 @@ impl<'a> Method<'a> {
                 }
             }
         } else {
-            String::from("&'env self")
+            String::from("self: __jni_bindgen::Ref<'env, Self>")
         };
 
         for (arg_idx, arg) in descriptor.arguments().enumerate() {
@@ -130,7 +130,7 @@ impl<'a> Method<'a> {
                     param_is_object = true;
                     match context.java_to_rust_path(class, mod_) {
                         Ok(path) => format!(
-                            "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<&'env {}>>",
+                            "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<__jni_bindgen::Ref<'env, {}>>>",
                             path
                         ),
                         Err(_) => {
@@ -142,7 +142,7 @@ impl<'a> Method<'a> {
                 }
                 method::Type::Array { levels, inner } => {
                     let mut buffer =
-                        "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<&'env ".to_owned();
+                        "impl __jni_bindgen::std::convert::Into<__jni_bindgen::std::option::Option<__jni_bindgen::Ref<'env, ".to_owned();
                     for _ in 0..(levels - 1) {
                         buffer.push_str("__jni_bindgen::ObjectArray<");
                     }
@@ -183,7 +183,7 @@ impl<'a> Method<'a> {
                         buffer.push_str(&context.throwable_rust_path(mod_));
                         buffer.push('>');
                     }
-                    buffer.push_str(">>"); // Option, Into
+                    buffer.push_str(">>>"); // Ref, Option, Into
 
                     param_is_object = true;
                     buffer
@@ -364,11 +364,7 @@ impl<'a> Method<'a> {
                 config::toml::StaticEnvStyle::__NonExhaustive => writeln!(out, "{}    let __jni_env = ...?;", indent)?, // XXX
             };
         } else {
-            writeln!(
-                out,
-                "{}        let __jni_env = __jni_bindgen::Env::from_raw(self.0.env);",
-                indent
-            )?;
+            writeln!(out, "{}        let __jni_env = self.env();", indent)?;
         }
 
         writeln!(
@@ -396,7 +392,7 @@ impl<'a> Method<'a> {
         } else {
             writeln!(
                 out,
-                "{}        __jni_env.call_{}_method_a(self.0.object, __jni_method, __jni_args.as_ptr())",
+                "{}        __jni_env.call_{}_method_a(self.as_raw(), __jni_method, __jni_args.as_ptr())",
                 indent, ret_method_fragment
             )?;
         }
